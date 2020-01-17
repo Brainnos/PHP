@@ -75,10 +75,9 @@ include('include/head.php');
         </div>
         <!-- Ajout d'une image -->
         <div class="form-group">
-          <label for="image">Image</label>
-          <img class="img-fluid" src="<?php echo $article["img_url"] ?>">
-          <input type="file" class="form-control-file" id="image" name="image">
-          <input type="hidden" name="current_image" value="<?php echo $article["img_url"] ?>">
+          <img src="<?php echo "images/thumbnails/".get_img_src($article['img_url']); ?>" class="img-fluid">
+          <input type="file" class="form-control-file py-2" id="image" name="image" value="<?php echo $article['img_url']; ?>">
+          <input type="hidden" class="form-control-file py-2" id="current_image" name="current_image" value="<?php echo $article['img_url']; ?>">
         </div>
 
 

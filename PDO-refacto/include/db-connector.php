@@ -10,7 +10,7 @@ global $dbh;
 //Variables de connexion à MySQL.
 $config = [
   'host' => 'localhost',
-  'db_name' => 'blog_2',
+  'db_name' => 'cafe',
   'user' => 'root',
   'password' => ''
 ];

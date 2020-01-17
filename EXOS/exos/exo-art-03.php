@@ -1,0 +1,34 @@
+<?php
+
+//Taille de l'image.
+$width = 1096;
+$height = 300;
+
+//Création de l'image.
+$image = imagecreatetruecolor($width, $height);
+//Allocation du rouge pour l'image.
+$red = imagecolorallocate($image, 206, 43, 55);
+$green = imagecolorallocate($image, 0, 146, 70);
+$white = imagecolorallocate($image, 241, 242, 241);
+
+$tiers = $width/3;
+for($y = 0; $y < $height; $y++)
+{
+    for($x = 0; $x < $width; $x++)
+    {
+        if($x < $tiers)
+        {
+            imagesetpixel($image, $x, $y, $green);
+        }
+        elseif ($x >= (2*$tiers)) {
+            imagesetpixel($image, $x, $y, $red);
+        }
+        else {
+            imagesetpixel($image, $x, $y, $white);
+        }
+    }
+}
+
+
+header('Content-type: image/png');
+imagepng($image);

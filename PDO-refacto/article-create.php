@@ -27,7 +27,7 @@ require_once('include/head.php');
     </nav>
 
     <!-- Formulaire de création de l'article. -->
-    <form action="create-article.php" enctype="multipart/form-data" method="post" class="shadow p-5 my-5 rounded border w-50 mx-auto">
+    <form action="create-article.php" method="post" enctype="multipart/form-data" class="shadow p-5 my-5 rounded border w-50 mx-auto">
       <div class="form-group">
         <label for="titre">Titre</label>
         <input type="text" class="form-control" id="titre" name="titre">
@@ -39,7 +39,7 @@ require_once('include/head.php');
         <small class="form-text text-muted">Contenu de l'article</small>
       </div>
       <div class="form-group">
-        <label for="corps">Date de création</label>
+        <label for="date">Date de création</label>
         <input type="date" class="form-control" id="date" name="date" value="2019-12-17">
       </div>
 
@@ -59,9 +59,10 @@ require_once('include/head.php');
 
       <!-- Ajout d'une image -->
       <div class="form-group">
-        <label for="image">Image</label>
-        <input type="file" class="form-control-file" id="image" name="image">
+        <img src="<?php echo get_img_src(); ?>" class="img-fluid">
+        <input type="file" class="form-control-file py-2" id="image" name="image">
       </div>
+
 
       <button type="submit" class="btn btn-primary">Créer</button>
     </form>

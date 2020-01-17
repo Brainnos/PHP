@@ -1,6 +1,6 @@
 <?php
 
-$mot_de_passe = '1234';
+$mot_de_passe = '123';
 
 echo 'mot de passe: '.$mot_de_passe.'<br>';
 

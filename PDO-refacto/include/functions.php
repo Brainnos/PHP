@@ -1,6 +1,9 @@
 <?php
 
-define("IMAGE_PAR_DEFAUT", "images/no-picture.png");
+define('IMAGE_PAR_DEFAUT', '../images/default/no-picture.png');
+define('IMAGE_THUMBNAILS_DIR', 'images/thumbnails');
+define('IMAGE_WATERMARK', 'images/wf3.png');
+define('NB_ARTICLES_PAR_PAGE', 2);
 
 //On inclus le fichier de connexion à la BDD.
 require_once('db-connector.php');
@@ -16,13 +19,31 @@ session_start();
 function get_articles()
 {
   global $dbh;
-  $query = 'SELECT article.id, article.titre, article.corps,  DATE_FORMAT(article.date, "%D %b %Y") AS date, auteur.nom, auteur.prenom, article.img_url
-    FROM article
-    JOIN auteur ON auteur.id = article.auteur_id';
 
-  $rows = $dbh->query($query);
-  $articles = $rows->fetchAll(PDO::FETCH_ASSOC);
+  $offset =  filter_input(INPUT_GET, 'p', FILTER_SANITIZE_NUMBER_INT) * NB_ARTICLES_PAR_PAGE ?? 0;
+  $limit = NB_ARTICLES_PAR_PAGE;
+
+  $query = 'SELECT article.id, article.titre, article.corps,  DATE_FORMAT(article.date, "%D %b %Y") AS date,
+  article.img_url, auteur.nom, auteur.prenom
+    FROM article
+    JOIN auteur ON auteur.id = article.auteur_id
+    LIMIT :debut, :fin';
+
+  $req = $dbh->prepare($query);
+  $req->bindParam(':debut', $offset, PDO::PARAM_INT);
+  $req->bindParam(':fin', $limit, PDO::PARAM_INT);
+  $req->execute();
+  $articles = $req->fetchAll(PDO::FETCH_ASSOC);
   return $articles;
+}
+
+/**
+ * Retourne le nombre total d'articles.
+ */
+function count_articles()
+{
+  global $dbh;
+  return $dbh->query("SELECT COUNT(*) FROM article")->fetchColumn();
 }
 
 
@@ -35,7 +56,6 @@ function get_articles()
  */
 function get_tags($article_id)
 {
-
   global $dbh;
   $query = "SELECT article_has_tag.article_id, tag.nom
   FROM article_has_tag
@@ -53,6 +73,8 @@ function get_tags($article_id)
   return $tags;
 }
 
+
+
 /**
  * Récupération des détails d'un seul article.
  *
@@ -63,9 +85,11 @@ function get_tags($article_id)
 function get_article($article_id)
 {
   global $dbh;
-  $query = 'SELECT article.titre, article.corps,  DATE_FORMAT(article.date, "%Y-%m-%d") AS date, img_url
+  $query = 'SELECT article.titre, article.corps,  DATE_FORMAT(article.date, "%Y-%m-%d") AS date, img_url,
+  auteur.nom, auteur.prenom
   FROM article
-  WHERE id = :article_id';
+  JOIN auteur ON article.auteur_id = auteur.id
+  WHERE article.id = :article_id';
 
   $req = $dbh->prepare($query);
   $params = [
@@ -212,11 +236,64 @@ function is_admin()
   }
 }
 
-function get_img_src($img_url = "")
+/**
+ * Fonction qui retourne l'image par défaut lorsque que $img_url est vide ou NULL.
+ *
+ * @param string $img_url
+ * @return string le chemin relatif vers l'image.
+ */
+function get_img_src($img_url = '')
 {
-  if(!$img_url) {
+  $path_parts = pathinfo($img_url);
+  if (!$img_url) {
     return IMAGE_PAR_DEFAUT;
   } else {
     return $img_url;
   }
 }
+
+/**
+ * Cette fonction permet de créer une image miniature à partir d'une image
+ * @param string $image correspond à l'image de base
+ * @param string $image_mini correspond au nom que l'on veut donner à l'image réduite
+ */
+function resize($image)
+{
+  $path_parts = pathinfo($image);
+  $source = imagecreatefromjpeg($image);
+  $destination = imagecreatetruecolor(200, 150);
+
+  $largeur_source = imagesx($source);
+  $hauteur_source = imagesy($source);
+  $largeur_destination = imagesx($destination);
+  $hauteur_destination = imagesy($destination);
+
+  // On crée la miniature
+  imagecopyresampled($destination, $source, 0, 0, 0, 0, $largeur_destination, $hauteur_destination, $largeur_source, $hauteur_source);
+
+  // On enregistre la miniature sous le nom
+  imagejpeg($destination, "images/thumbnails/" . $path_parts['basename']);
+}
+
+function watermark($img_path)
+{
+  $path_parts = pathinfo($img_path);
+  $stamp = imagecreatefrompng(IMAGE_WATERMARK);
+  $im = imagecreatefromjpeg($img_path);
+
+  $marge_right = 10;
+  $marge_bottom = 10;
+  $sx = imagesx($stamp);
+  $sy = imagesy($stamp);
+
+  $new_scale = imagescale($im, 1140);
+
+  imagecopy($new_scale, $stamp, imagesx($new_scale) - $sx - $marge_right, imagesy($new_scale) - $sy - $marge_bottom, 0, 0, imagesx($stamp), imagesy($stamp));
+
+  imagejpeg($new_scale, "images/protected/".$path_parts['basename']);
+  imagedestroy($new_scale);
+}
+
+function url_clic($corps) {
+  echo preg_replace('#http://[a-z0-9._/-?&]+#i', '<a href="$0" target="blank">$0</a>', $corps);
+}             
