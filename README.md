@@ -1,1 +1,1 @@
-# PHP-FULL
+A repository regrouping little exercises in PHP
